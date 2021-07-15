@@ -364,6 +364,7 @@ func main() {
 	Flagpassword2 := flag.String("p2", "", "Second password (for example, Cisco enable password)")
 	Flaggroupname := flag.String("g", "Default", "Group name")
 	Listgroup := flag.Bool("lg", false, "List group")
+	ListAll := flag.Bool("l", false, "List all")
 	Flagaddresource := flag.Bool("add", false, "Add resource")
 	Flageditresource := flag.Bool("edit", false, "Edit resource")
 	Flagdelete := flag.Bool("delete", false, "Delete resource")
@@ -390,6 +391,24 @@ func main() {
 	Er, Gr := checkFile(*KeystoreName, KeystorePassword)
 	if Er != nil {
 		fmt.Println(Er)
+	}
+
+	if *ListAll {
+		fmt.Println("List groups and resources")
+		fmt.Println("-------------------------")
+		LastGroupIndex := len((Gr).Groups) - 1
+		for CurrentGroupIndex, CurrentGroup := range (*Gr).Groups {
+			fmt.Println("|--", CurrentGroup.Groupname)
+			for _, CurrentResourceInGroup := range CurrentGroup.Resources {
+				if CurrentGroupIndex == LastGroupIndex {
+					fmt.Println("   |--", CurrentResourceInGroup.Name)
+				} else {
+					fmt.Println("|  |--", CurrentResourceInGroup.Name)
+				}
+
+			}
+		}
+		os.Exit(0)
 	}
 
 	if *Listgroup {
