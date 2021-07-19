@@ -170,10 +170,12 @@ func DeleteResource(ResourceName string, GroupName string, KSdata *KeystoreData)
 			//если же элементов больше одного то если элемент первый просто укоротим список слева
 			if FRindFinded == 0 {
 				(*KSdata).Groups[FGindFinded].Resources = (*KSdata).Groups[FGindFinded].Resources[FRindFinded+1:]
+				return nil
 			}
 			//если элемент последний то укоротим справа
 			if FRindFinded == len((*KSdata).Groups[FGindFinded].Resources)-1 {
 				(*KSdata).Groups[FGindFinded].Resources = (*KSdata).Groups[FGindFinded].Resources[:FRindFinded]
+				return nil
 			}
 
 			if FRindFinded > 0 && FRindFinded < len((*KSdata).Groups[FGindFinded].Resources)-1 {
@@ -182,6 +184,7 @@ func DeleteResource(ResourceName string, GroupName string, KSdata *KeystoreData)
 				(*KSdata).Groups[FGindFinded].Resources = make([]ResourceItem, 0)
 				(*KSdata).Groups[FGindFinded].Resources = append((*KSdata).Groups[FGindFinded].Resources, FRes...)
 				(*KSdata).Groups[FGindFinded].Resources = append((*KSdata).Groups[FGindFinded].Resources, SRes...)
+				return nil
 			}
 		}
 	}
@@ -215,10 +218,12 @@ func DeleteEmptyGroup(GroupName string, KSdata *KeystoreData) error {
 			//если же элементов больше одного то если элемент первый просто укоротим список слева
 			if FGindFinded == 0 {
 				(*KSdata).Groups = (*KSdata).Groups[FGindFinded+1:]
+				return nil
 			}
 			//если элемент последний то укоротим справа
 			if FGindFinded == len((*KSdata).Groups)-1 {
 				(*KSdata).Groups = (*KSdata).Groups[:FGindFinded]
+				return nil
 			}
 
 			if FGindFinded > 0 && FGindFinded < len((*KSdata).Groups)-1 {
@@ -227,6 +232,7 @@ func DeleteEmptyGroup(GroupName string, KSdata *KeystoreData) error {
 				(*KSdata).Groups = make([]Group, 0)
 				(*KSdata).Groups = append((*KSdata).Groups, FGroup...)
 				(*KSdata).Groups = append((*KSdata).Groups, SGroup...)
+				return nil
 			}
 		}
 	}
