@@ -11,6 +11,7 @@ import (
 	"os"
 	"passstore"
 	"syscall"
+	"time"
 )
 
 type KeystoreData struct {
@@ -330,6 +331,11 @@ func checkFile(filename string, keystorepassword string) (error, *KeystoreData) 
 				return err, nil
 			} else {
 				filebytes, err := ioutil.ReadFile(filename)
+				BackupFileName := fmt.Sprintf("%s_%s.back", filename, time.Now().Format("2006-01-02_15_04_05"))
+				backupwriteerror := ioutil.WriteFile(BackupFileName, filebytes, 0644)
+				if backupwriteerror != nil {
+					fmt.Println("Error make backup:", backupwriteerror)
+				}
 				if err != nil {
 					return err, nil
 				} else {
@@ -340,6 +346,11 @@ func checkFile(filename string, keystorepassword string) (error, *KeystoreData) 
 		}
 	} else {
 		filebytes, err := ioutil.ReadFile(filename)
+		BackupFileName := fmt.Sprintf("%s_%s.back", filename, time.Now().Format("2006-01-02_15_04_05"))
+		backupwriteerror := ioutil.WriteFile(BackupFileName, filebytes, 0644)
+		if backupwriteerror != nil {
+			fmt.Println("Error make backup:", backupwriteerror)
+		}
 		if err != nil {
 			return err, nil
 		} else {
