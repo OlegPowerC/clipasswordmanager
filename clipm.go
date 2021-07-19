@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"passstore"
+	"runtime"
 	"syscall"
 	"time"
 )
@@ -303,6 +304,11 @@ func CheckFlag(FlagName string) bool {
 }
 
 func checkFile(filename string, keystorepassword string) (error, *KeystoreData) {
+	backupdirectory := "backups"
+	pathseparator := "/"
+	if runtime.GOOS == "windows" {
+		pathseparator = "\\"
+	}
 	_, err := os.Stat(filename)
 	FirstGroups := make([]Group, 0)
 	var FJSdata KeystoreData
@@ -331,7 +337,7 @@ func checkFile(filename string, keystorepassword string) (error, *KeystoreData) 
 				return err, nil
 			} else {
 				filebytes, err := ioutil.ReadFile(filename)
-				BackupFileName := fmt.Sprintf("%s_%s.back", filename, time.Now().Format("2006-01-02_15_04_05"))
+				BackupFileName := fmt.Sprintf("%s%s%s_%s.back", backupdirectory, pathseparator, filename, time.Now().Format("2006-01-02_15_04_05"))
 				backupwriteerror := ioutil.WriteFile(BackupFileName, filebytes, 0644)
 				if backupwriteerror != nil {
 					fmt.Println("Error make backup:", backupwriteerror)
@@ -346,7 +352,7 @@ func checkFile(filename string, keystorepassword string) (error, *KeystoreData) 
 		}
 	} else {
 		filebytes, err := ioutil.ReadFile(filename)
-		BackupFileName := fmt.Sprintf("%s_%s.back", filename, time.Now().Format("2006-01-02_15_04_05"))
+		BackupFileName := fmt.Sprintf("%s%s%s_%s.back", backupdirectory, pathseparator, filename, time.Now().Format("2006-01-02_15_04_05"))
 		backupwriteerror := ioutil.WriteFile(BackupFileName, filebytes, 0644)
 		if backupwriteerror != nil {
 			fmt.Println("Error make backup:", backupwriteerror)
