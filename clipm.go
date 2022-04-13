@@ -142,6 +142,86 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 	return nil
 }
 
+func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, KSdata *KeystoreData, keystorepassword string, NewName string) error {
+	//EncryptedPassword1, _ := EncryptPassword(Password, keystorepassword)
+	//EncryptedPassword2, _ := EncryptPassword(Password2, keystorepassword)
+
+	if len(Name) < 3 {
+		return fmt.Errorf("No name of the resource")
+	}
+	if len(GroupName) < 3 {
+		return fmt.Errorf("No group name")
+	}
+
+	if len(Ip) > 0 {
+		ChIerr := CheckIpAddrs.CheckSingleIp(Ip)
+		if ChIerr != nil {
+			return ChIerr
+		}
+	}
+
+	FGindFinded := -1
+	FRindFinded := -1
+	for Gind, Gval := range (*KSdata).Groups {
+		if GroupName == Gval.Groupname {
+			FGindFinded = Gind
+			break
+		}
+	}
+	if FGindFinded == -1 {
+		return fmt.Errorf("Group %s not found", GroupName)
+	} else {
+		for rind, rdata := range (*KSdata).Groups[FGindFinded].Resources {
+			if rdata.Name == Name {
+				FRindFinded = rind
+				break
+			}
+		}
+	}
+	if FRindFinded != -1 {
+		//Если запись найдена
+		var NewResource ResourceItem
+		NewResource = (*KSdata).Groups[FGindFinded].Resources[FRindFinded]
+		if len(NewName) < 3 {
+			return fmt.Errorf("Wrong new name")
+		}
+
+		NewResource.Name = NewName
+
+		if len(Ip) > 7 {
+			NewResource.Ipaddr = Ip
+		}
+		if len(Fqdn) > 3 {
+			NewResource.FQDN = Fqdn
+		}
+		if len(Username) > 3 {
+			NewResource.Username = Username
+		}
+		if len(NewResource.Password) > 8 {
+			NewResource.Password, _ = DecryptPassword(NewResource.Password, keystorepassword)
+		}
+		if len(NewResource.Password2) > 8 {
+			NewResource.Password2, _ = DecryptPassword(NewResource.Password2, keystorepassword)
+		}
+
+		if len(Password) > 3 {
+			NewResource.Password = Password
+		}
+		if len(Password2) > 3 {
+			NewResource.Password2 = Password2
+		}
+
+		AddErr := AddData(GroupName, NewResource.Name, NewResource.Ipaddr, NewResource.FQDN, NewResource.Username, NewResource.Password, NewResource.Password2, KSdata, keystorepassword)
+		if AddErr != nil {
+			return fmt.Errorf("Error while adding: %s", AddErr)
+		}
+	}
+	if FRindFinded == -1 {
+		return fmt.Errorf("No resource found")
+	}
+	return nil
+}
+
 func DeleteResource(ResourceName string, GroupName string, KSdata *KeystoreData) error {
 	if len(ResourceName) < 3 {
 		return fmt.Errorf("No name of the resource")
@@ -317,6 +397,7 @@ func checkFile(filename string, keystorepassword string) (error, *KeystoreData) 
 	PasswordHash.Reset()
 	Hash := PasswordHash.Sum([]byte(keystorepassword))
 	if os.IsNotExist(err) {
+		//Файл (хранилище) не найден
 		fmt.Println("No keystore", filename, "exsist - make it")
 		if len(keystorepassword) > 3 {
 			FJSdata.Encryptedpasswords = true
@@ -337,11 +418,6 @@ func checkFile(filename string, keystorepassword string) (error, *KeystoreData) 
 				return err, nil
 			} else {
 				filebytes, err := ioutil.ReadFile(filename)
-				BackupFileName := fmt.Sprintf("%s%s%s_%s.back", backupdirectory, pathseparator, filename, time.Now().Format("2006-01-02_15_04_05"))
-				backupwriteerror := ioutil.WriteFile(BackupFileName, filebytes, 0644)
-				if backupwriteerror != nil {
-					fmt.Println("Error make backup:", backupwriteerror)
-				}
 				if err != nil {
 					return err, nil
 				} else {
@@ -351,6 +427,7 @@ func checkFile(filename string, keystorepassword string) (error, *KeystoreData) 
 			}
 		}
 	} else {
+		//Файл существует. После его чтения, сразу создаем резервную копию
 		filebytes, err := ioutil.ReadFile(filename)
 		BackupFileName := fmt.Sprintf("%s%s%s_%s.back", backupdirectory, pathseparator, filename, time.Now().Format("2006-01-02_15_04_05"))
 		backupwriteerror := ioutil.WriteFile(BackupFileName, filebytes, 0644)
@@ -391,6 +468,7 @@ func main() {
 	Flagaddresource := flag.Bool("add", false, "Add resource")
 	Flageditresource := flag.Bool("edit", false, "Edit resource")
 	Flagdelete := flag.Bool("delete", false, "Delete resource")
+	Flagcopy := flag.String("copy", "", "Provide new name of the resource")
 	Flagdeleteemptygp := flag.Bool("deletegroup", false, "Delete empty group")
 	Listresourcesingroup := flag.Bool("lrg", false, "Provide group name -g for list resources in this group")
 	Showresource := flag.Bool("show", false, "Provide group name -g and resource name -n")
@@ -543,6 +621,22 @@ func main() {
 				os.Exit(1)
 			} else {
 				fmt.Println("Edit resource complete")
+			}
+			WriteData(*KeystoreName, Gr)
+		} else {
+			fmt.Println("Please provide resource name")
+		}
+
+		os.Exit(0)
+	}
+	if len(*Flagcopy) > 3 {
+		if CheckFlag("n") {
+			CopyErr := CopyResource(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, Gr, KeystorePassword, *Flagcopy)
+			if CopyErr != nil {
+				fmt.Println(CopyErr)
+				os.Exit(1)
+			} else {
+				fmt.Println("Copy resource complete")
 			}
 			WriteData(*KeystoreName, Gr)
 		} else {
