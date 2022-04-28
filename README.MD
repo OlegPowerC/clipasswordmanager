@@ -8,6 +8,43 @@ If it equal then password is valid.
 I make simple stupid cli interface but it work perfect for me.
 You can change anything but please send me Your modification.
 Thank You.
+
+Parameters:
+-add
+Add resource
+-copy string
+Provide new name of the resource
+-delete
+Delete resource
+-deletegroup
+Delete empty group
+-edit
+Edit resource
+-fqdn string
+Resource FQDN adress
+-g string
+Group name (default "Default")
+-i string
+Resource IP adress
+-keystore string
+Name of the keystore - file name like: keystore1.json (default "Resources.json")
+-l    List all
+-lg
+List group
+-lrg
+Provide group name -g for list resources in this group
+-n string
+Resource name
+-p string
+Password
+-p2 string
+Second password (for example, Cisco enable password)
+-show
+Provide group name -g and resource name -n
+-u string
+Username
+-h Print help
+
 Example command:
     add resource:
         clipm.exe -keystore mainkeystore.json -add -g Group1 -n CiscoSw_01 -i 192.168.1.58 -u CiscoAdm -p CiP@$$1 -p2 CiEnableP@$$1
@@ -35,5 +72,7 @@ Example command:
 PS:
 What I will want to add in the future:
 1. Backup file. (added backup file to "backup" folder, after open keystore)
+   Added. Also added file settings.json, if parameter Create_backups > 0 then will make backups
 2. Check IP and FQDN data (added check IP addresses but not FQDN)
 3. More tests (found bug when delete group and fixed it)
+added parameter Default_keystore in settings.json for provide default keystore name (json file name)

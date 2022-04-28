@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"passstore"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -19,6 +20,11 @@ type KeystoreData struct {
 	Encryptedpasswords bool    `json:"encryptedpasswords" xml:"encryptedpasswords"`
 	Magicphrase        string  `json:"magicphrase" xml:"magicphrase"`
 	Groups             []Group `json:"groups"`
+}
+
+type Settings struct {
+	Default_keystore string `json:"Default_keystore"`
+	Create_backups   int    `json:"Create_backups"`
 }
 
 type ResourceItem struct {
@@ -383,7 +389,7 @@ func CheckFlag(FlagName string) bool {
 	return FlagFound
 }
 
-func checkFile(filename string, keystorepassword string) (error, *KeystoreData) {
+func checkFile(filename string, keystorepassword string, doBackup bool) (error, *KeystoreData) {
 	backupdirectory := "backups"
 	pathseparator := "/"
 	if runtime.GOOS == "windows" {
@@ -429,11 +435,14 @@ func checkFile(filename string, keystorepassword string) (error, *KeystoreData) 
 	} else {
 		//Файл существует. После его чтения, сразу создаем резервную копию
 		filebytes, err := ioutil.ReadFile(filename)
-		BackupFileName := fmt.Sprintf("%s%s%s_%s.back", backupdirectory, pathseparator, filename, time.Now().Format("2006-01-02_15_04_05"))
-		backupwriteerror := ioutil.WriteFile(BackupFileName, filebytes, 0644)
-		if backupwriteerror != nil {
-			fmt.Println("Error make backup:", backupwriteerror)
+		if doBackup {
+			BackupFileName := fmt.Sprintf("%s%s%s_%s.back", backupdirectory, pathseparator, filename, time.Now().Format("2006-01-02_15_04_05"))
+			backupwriteerror := ioutil.WriteFile(BackupFileName, filebytes, 0644)
+			if backupwriteerror != nil {
+				fmt.Println("Error make backup:", backupwriteerror)
+			}
 		}
+
 		if err != nil {
 			return err, nil
 		} else {
@@ -475,6 +484,29 @@ func main() {
 	KeystoreName := flag.String("keystore", "Resources.json", "Name of the keystore - file name like: keystore1.json")
 	flag.Parse()
 
+	DoBackup := true
+
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	jsonSettingsFile, jsonSettingsFileErr := os.Open(exPath + "\\settings.json")
+	if jsonSettingsFileErr != nil {
+		fmt.Println(jsonSettingsFileErr)
+	}
+	defer jsonSettingsFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonSettingsFile)
+	var SettingDada Settings
+	umErr := json.Unmarshal(byteValue, &SettingDada)
+	if umErr == nil {
+		*KeystoreName = SettingDada.Default_keystore
+		if SettingDada.Create_backups == 0 {
+			DoBackup = false
+		}
+	}
+
 	fmt.Println("Keystore will be:", *KeystoreName)
 
 	KeystorePassword := ""
@@ -489,7 +521,7 @@ func main() {
 		KeystorePassword = string(KeystorePasswordByte)
 	}
 
-	Er, Gr := checkFile(*KeystoreName, KeystorePassword)
+	Er, Gr := checkFile(*KeystoreName, KeystorePassword, DoBackup)
 	if Er != nil {
 		fmt.Println(Er)
 	}
