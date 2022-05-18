@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	Psstr "github.com/OlegPowerC/aespassstore"
 	CheckIpAddrs "github.com/OlegPowerC/validate_ipaddresses"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"os"
-	"passstore"
 	"path/filepath"
 	"runtime"
 	"syscall"
@@ -346,7 +346,7 @@ func EncryptPassword(PlainPassword string, Masterkey string) (EncryptedPasswordB
 	if lenck > 16 {
 		copy(CIPHER_KEY, CIPHER_KEYE[:16])
 	}
-	EncryptedPassword, EncryptErr := passstore.Encrypt(CIPHER_KEY, PlainPassword)
+	EncryptedPassword, EncryptErr := Psstr.Encrypt(CIPHER_KEY, PlainPassword)
 	if EncryptErr != nil {
 		return "", EncryptErr
 	} else {
@@ -368,7 +368,7 @@ func DecryptPassword(EncryptedPassword string, Masterkey string) (PlainTextPassw
 		copy(CIPHER_KEY, CIPHER_KEYE[:16])
 	}
 	if len(EncryptedPassword) > 1 {
-		DecryptedPassword, DecryptErr := passstore.Decrypt(CIPHER_KEY, EncryptedPassword)
+		DecryptedPassword, DecryptErr := Psstr.Decrypt(CIPHER_KEY, EncryptedPassword)
 		if DecryptErr != nil {
 			return "", DecryptErr
 		} else {
