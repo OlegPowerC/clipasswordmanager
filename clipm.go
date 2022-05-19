@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha1"
 	"encoding/json"
+	"encoding/xml"
 	"flag"
 	"fmt"
 	Psstr "github.com/OlegPowerC/aespassstore"
@@ -25,6 +26,10 @@ type KeystoreData struct {
 type Settings struct {
 	Default_keystore string `json:"Default_keystore"`
 	Create_backups   int    `json:"Create_backups"`
+}
+
+type UnXmlKeystoreData struct {
+	Groups []Group `json:"groups"`
 }
 
 type ResourceItem struct {
@@ -399,9 +404,11 @@ func checkFile(filename string, keystorepassword string, doBackup bool) (error, 
 	FirstGroups := make([]Group, 0)
 	var FJSdata KeystoreData
 	FJSdata.Groups = FirstGroups
+
 	PasswordHash := sha1.New()
 	PasswordHash.Reset()
 	Hash := PasswordHash.Sum([]byte(keystorepassword))
+
 	if os.IsNotExist(err) {
 		//Файл (хранилище) не найден
 		fmt.Println("No keystore", filename, "exsist - make it")
@@ -464,6 +471,65 @@ func WriteData(KeystoreName string, Gr *KeystoreData) error {
 	return err
 }
 
+func MakePlainetxXML(UnexcryptedXmlFilename string, Gr *KeystoreData, KeystorePassword string) error {
+	var XMLData UnXmlKeystoreData
+	XMLData.Groups = make([]Group, 0)
+	XMLItems := make([]Group, 0)
+	var XMLitem Group
+	for _, GrName := range Gr.Groups {
+		var XMLResource ResourceItem
+		XMLSources := make([]ResourceItem, 0)
+		XMLitem.Groupname = GrName.Groupname
+		for _, Res := range GrName.Resources {
+			XMLResource.FQDN = Res.FQDN
+			XMLResource.Name = Res.Name
+			XMLResource.Ipaddr = Res.Ipaddr
+			XMLResource.Username = Res.Username
+			XMLResource.Password, _ = DecryptPassword(Res.Password, KeystorePassword)
+			XMLResource.Password2, _ = DecryptPassword(Res.Password2, KeystorePassword)
+			XMLSources = append(XMLSources, XMLResource)
+		}
+		XMLitem.Resources = XMLSources
+		XMLItems = append(XMLItems, XMLitem)
+	}
+	XMLData.Groups = XMLItems
+	if len(XMLItems) > 0 {
+		jsondata, _ := xml.Marshal(&XMLItems)
+		_, err := os.Create(UnexcryptedXmlFilename)
+		if err != nil {
+			return err
+		} else {
+			err = ioutil.WriteFile(UnexcryptedXmlFilename, jsondata, 0644)
+		}
+	}
+	return nil
+}
+
+func ChangePassword(Gr *KeystoreData, KeystoreOldPassword string, KeystoreNewPassword string) error {
+	for GrIndex, GrName := range Gr.Groups {
+		for ResIndex, Res := range GrName.Resources {
+			Password, _ := DecryptPassword(Res.Password, KeystoreOldPassword)
+			Password2, _ := DecryptPassword(Res.Password2, KeystoreOldPassword)
+			NewEncpassword, NewEncErrpassword := EncryptPassword(Password, KeystoreNewPassword)
+			if NewEncErrpassword != nil {
+				return NewEncErrpassword
+			}
+			NewEncpassword2, NewEncErrpassword2 := EncryptPassword(Password2, KeystoreNewPassword)
+			if NewEncErrpassword2 != nil {
+				return NewEncErrpassword2
+			}
+			Gr.Groups[GrIndex].Resources[ResIndex].Password = NewEncpassword
+			Gr.Groups[GrIndex].Resources[ResIndex].Password2 = NewEncpassword2
+		}
+	}
+	PasswordHash := sha1.New()
+	PasswordHash.Reset()
+	Hash := PasswordHash.Sum([]byte(KeystoreNewPassword))
+
+	Gr.Magicphrase, _ = EncryptPassword(string(Hash), KeystoreNewPassword)
+	return nil
+}
+
 func main() {
 	Flagname := flag.String("n", "", "Resource name")
 	Flagip := flag.String("i", "", "Resource IP adress")
@@ -482,6 +548,8 @@ func main() {
 	Listresourcesingroup := flag.Bool("lrg", false, "Provide group name -g for list resources in this group")
 	Showresource := flag.Bool("show", false, "Provide group name -g and resource name -n")
 	KeystoreName := flag.String("keystore", "Resources.json", "Name of the keystore - file name like: keystore1.json")
+	MakeUnencryptedXML := flag.String("makexml", "", "Make unencrypted xml file")
+	ChangeMasterPassword := flag.Bool("passwd", false, "Change Master password for datastore")
 	flag.Parse()
 
 	DoBackup := true
@@ -524,6 +592,38 @@ func main() {
 	Er, Gr := checkFile(*KeystoreName, KeystorePassword, DoBackup)
 	if Er != nil {
 		fmt.Println(Er)
+	}
+
+	if *ChangeMasterPassword {
+		KeystoreNewPassword := ""
+
+		fmt.Print("New password:\r\n")
+
+		KeystorePasswordByte, pEerr := terminal.ReadPassword(int(syscall.Stdin))
+		if pEerr != nil {
+			fmt.Println(pEerr)
+			os.Exit(1)
+		} else {
+			KeystoreNewPassword = string(KeystorePasswordByte)
+		}
+
+		Er = ChangePassword(Gr, KeystorePassword, KeystoreNewPassword)
+		if pEerr != nil {
+			fmt.Println(pEerr)
+			os.Exit(1)
+		} else {
+			WriteData(*KeystoreName, Gr)
+			fmt.Println("Password changed!")
+			os.Exit(0)
+		}
+	}
+
+	if len(*MakeUnencryptedXML) > 3 {
+		Er = MakePlainetxXML(*MakeUnencryptedXML, Gr, KeystorePassword)
+		if Er != nil {
+			fmt.Println(Er)
+		}
+		os.Exit(0)
 	}
 
 	if *ListAll {
