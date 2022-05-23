@@ -648,7 +648,7 @@ func main() {
 		fmt.Println(Er)
 	}
 
-	if len(*FindResources) >= 3 {
+	if len(*FindResources) >= 2 {
 		MessageToCons := fmt.Sprintf("Find resource by text \"%s\"in all field except password, no case sensivity", *FindResources)
 		fmt.Println(MessageToCons)
 		Ferr, Fres := FindResorceByText(Gr, *FindResources)
