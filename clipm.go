@@ -639,7 +639,6 @@ func main() {
 		MessageToCons := fmt.Sprintf("Find resource by text \"%s\"in all field except password, no case sensivity", *FindResources)
 		fmt.Println(MessageToCons)
 		Ferr, Fres, Fgroup := FindResorceByText(Gr, *FindResources)
-		fmt.Println(Ferr, Fres, Fgroup)
 		if Ferr != nil {
 			fmt.Println(Ferr)
 			os.Exit(1)
