@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -33,12 +34,13 @@ type UnXmlKeystoreData struct {
 }
 
 type ResourceItem struct {
-	Ipaddr    string `json:"ipaddr" xml:"ipaddr"`
-	Name      string `json:"name" xml:"name"`
-	FQDN      string `json:"fqdn" xml:"fqdn"`
-	Username  string `json:"username" xml:"username"`
-	Password  string `json:"password" xml:"password"`
-	Password2 string `json:"password_2" xml:"password_2"`
+	Ipaddr      string `json:"ipaddr" xml:"ipaddr"`
+	Name        string `json:"name" xml:"name"`
+	FQDN        string `json:"fqdn" xml:"fqdn"`
+	Username    string `json:"username" xml:"username"`
+	Password    string `json:"password" xml:"password"`
+	Password2   string `json:"password_2" xml:"password_2"`
+	Description string `json:"description" xml:"description"`
 }
 
 type Group struct {
@@ -46,7 +48,7 @@ type Group struct {
 	Resources []ResourceItem `json:"resources" xml:"resources"`
 }
 
-func AddData(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, KSData *KeystoreData, keystorepassword string) error {
+func AddData(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, Description string, KSData *KeystoreData, keystorepassword string) error {
 	EncryptedPassword1, _ := EncryptPassword(Password, keystorepassword)
 	EncryptedPassword2, _ := EncryptPassword(Password2, keystorepassword)
 
@@ -76,6 +78,7 @@ func AddData(GroupName string, Name string, Ip string, Fqdn string, Username str
 	ResourceItemNewData.Username = Username
 	ResourceItemNewData.Password = EncryptedPassword1
 	ResourceItemNewData.Password2 = EncryptedPassword2
+	ResourceItemNewData.Description = Description
 	if FGindFinded >= 0 {
 		for _, ResourceCheck := range (*KSData).Groups[FGindFinded].Resources {
 			if ResourceCheck.Name == Name {
@@ -93,7 +96,7 @@ func AddData(GroupName string, Name string, Ip string, Fqdn string, Username str
 	return nil
 }
 
-func EditResource(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, KSdata *KeystoreData, keystorepassword string) error {
+func EditResource(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, Description string, KSdata *KeystoreData, keystorepassword string) error {
 	EncryptedPassword1, _ := EncryptPassword(Password, keystorepassword)
 	EncryptedPassword2, _ := EncryptPassword(Password2, keystorepassword)
 
@@ -146,6 +149,9 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 		if len(Password2) > 3 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password2 = EncryptedPassword2
 		}
+		if len(Description) > 1 {
+			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Description = Description
+		}
 	}
 	if FRindFinded == -1 {
 		return fmt.Errorf("No resource found")
@@ -153,7 +159,7 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 	return nil
 }
 
-func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, KSdata *KeystoreData, keystorepassword string, NewName string) error {
+func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, Description string, KSdata *KeystoreData, keystorepassword string, NewName string) error {
 	//EncryptedPassword1, _ := EncryptPassword(Password, keystorepassword)
 	//EncryptedPassword2, _ := EncryptPassword(Password2, keystorepassword)
 
@@ -222,7 +228,11 @@ func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 			NewResource.Password2 = Password2
 		}
 
-		AddErr := AddData(GroupName, NewResource.Name, NewResource.Ipaddr, NewResource.FQDN, NewResource.Username, NewResource.Password, NewResource.Password2, KSdata, keystorepassword)
+		if len(Description) > 1 {
+			NewResource.Description = Description
+		}
+
+		AddErr := AddData(GroupName, NewResource.Name, NewResource.Ipaddr, NewResource.FQDN, NewResource.Username, NewResource.Password, NewResource.Password2, Description, KSdata, keystorepassword)
 		if AddErr != nil {
 			return fmt.Errorf("Error while adding: %s", AddErr)
 		}
@@ -419,7 +429,7 @@ func checkFile(filename string, keystorepassword string, doBackup bool) (error, 
 			FJSdata.Encryptedpasswords = false
 			FJSdata.Magicphrase = ""
 		}
-		AddData("Default", "Demoresource", "192.168.0.1", "DemoCisco.yourdomain.local", "Cisco", "Cisco", "Cisco123%", &FJSdata, keystorepassword)
+		AddData("Default", "Demoresource", "192.168.0.1", "DemoCisco.yourdomain.local", "Cisco", "Cisco", "Cisco123%", "Demo resource", &FJSdata, keystorepassword)
 
 		jsondata, _ := json.Marshal(&FJSdata)
 		_, err := os.Create(filename)
@@ -530,6 +540,35 @@ func ChangePassword(Gr *KeystoreData, KeystoreOldPassword string, KeystoreNewPas
 	return nil
 }
 
+func ShowRes(CurrentResourceInGroup ResourceItem, KeystorePassword string) {
+	fmt.Println("Name\t\t:", CurrentResourceInGroup.Name)
+	fmt.Println("IP address\t:", CurrentResourceInGroup.Ipaddr)
+	fmt.Println("FQDN\t\t:", CurrentResourceInGroup.FQDN)
+	fmt.Println("Username\t:", CurrentResourceInGroup.Username)
+	PlainPassword, _ := DecryptPassword(CurrentResourceInGroup.Password, KeystorePassword)
+	fmt.Println("Password\t:", PlainPassword)
+	PlainPassword2, _ := DecryptPassword(CurrentResourceInGroup.Password2, KeystorePassword)
+	fmt.Println("Second password\t:", PlainPassword2)
+	fmt.Println("Description\t:", CurrentResourceInGroup.Description)
+}
+
+func FindResorceByText(Gr *KeystoreData, TextToFind string) (err error, Resource ResourceItem, GroupName string) {
+	FidText := strings.TrimSpace(strings.ToLower(TextToFind))
+	for GrIndex, GrName := range Gr.Groups {
+		for ResIndex, Res := range GrName.Resources {
+			if strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].Name)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].Ipaddr)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].FQDN)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].Username)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].Description)), FidText) {
+				return nil, Res, GrName.Groupname
+			}
+		}
+	}
+	ErrTextIs := fmt.Errorf("Error: %s", "Resource not found")
+	return ErrTextIs, Resource, ""
+}
+
 func main() {
 	Flagname := flag.String("n", "", "Resource name")
 	Flagip := flag.String("i", "", "Resource IP adress")
@@ -549,7 +588,9 @@ func main() {
 	Showresource := flag.Bool("show", false, "Provide group name -g and resource name -n")
 	KeystoreName := flag.String("keystore", "Resources.json", "Name of the keystore - file name like: keystore1.json")
 	MakeUnencryptedXML := flag.String("makexml", "", "Make unencrypted xml file")
+	Description := flag.String("d", "", "Description")
 	ChangeMasterPassword := flag.Bool("passwd", false, "Change Master password for datastore")
+	FindResources := flag.String("find", "", "Find resources by text")
 	flag.Parse()
 
 	DoBackup := true
@@ -592,6 +633,16 @@ func main() {
 	Er, Gr := checkFile(*KeystoreName, KeystorePassword, DoBackup)
 	if Er != nil {
 		fmt.Println(Er)
+	}
+
+	if len(*FindResources) > 3 {
+		Ferr, Fres, Fgroup := FindResorceByText(Gr, KeystorePassword)
+		if Ferr != nil {
+			fmt.Println(Ferr)
+			os.Exit(1)
+		}
+		fmt.Println("Found resource in the group:", Fgroup)
+		ShowRes(Fres, KeystorePassword)
 	}
 
 	if *ChangeMasterPassword {
@@ -674,14 +725,7 @@ func main() {
 					for _, CurrentResourceInGroup := range CurrentGroup.Resources {
 						if CurrentResourceInGroup.Name == *Flagname {
 							ResourcenameFound = true
-							fmt.Println("Name      :\t\t", CurrentResourceInGroup.Name)
-							fmt.Println("IP address:\t\t", CurrentResourceInGroup.Ipaddr)
-							fmt.Println("FQDN      :\t\t", CurrentResourceInGroup.FQDN)
-							fmt.Println("Username  :\t\t", CurrentResourceInGroup.Username)
-							PlainPassword, _ := DecryptPassword(CurrentResourceInGroup.Password, KeystorePassword)
-							fmt.Println("Password  :\t\t", PlainPassword)
-							PlainPassword2, _ := DecryptPassword(CurrentResourceInGroup.Password2, KeystorePassword)
-							fmt.Println("Second password  :\t", PlainPassword2)
+							ShowRes(CurrentResourceInGroup, KeystorePassword)
 						}
 					}
 				}
@@ -701,7 +745,7 @@ func main() {
 
 	if *Flagaddresource {
 		if CheckFlag("n") {
-			AddErr := AddData(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, Gr, KeystorePassword)
+			AddErr := AddData(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, *Description, Gr, KeystorePassword)
 			if AddErr != nil {
 				fmt.Println(AddErr)
 				os.Exit(1)
@@ -747,7 +791,7 @@ func main() {
 
 	if *Flageditresource {
 		if CheckFlag("n") {
-			DeleteErr := EditResource(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, Gr, KeystorePassword)
+			DeleteErr := EditResource(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, *Description, Gr, KeystorePassword)
 			if DeleteErr != nil {
 				fmt.Println(DeleteErr)
 				os.Exit(1)
@@ -763,7 +807,7 @@ func main() {
 	}
 	if len(*Flagcopy) > 3 {
 		if CheckFlag("n") {
-			CopyErr := CopyResource(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, Gr, KeystorePassword, *Flagcopy)
+			CopyErr := CopyResource(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, *Description, Gr, KeystorePassword, *Flagcopy)
 			if CopyErr != nil {
 				fmt.Println(CopyErr)
 				os.Exit(1)
