@@ -90,3 +90,7 @@ Example command:
 New features:
     added parameter Default_keystore in settings.json for provide default keystore name (json file name)
     added parameter Create_backups in settings.json. If this parameter 0 - no backups will be make
+
+Binary:
+Windows: clipm.exe
+Linux: clipm (will need make it executable by chmod)
