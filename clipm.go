@@ -625,6 +625,7 @@ func main() {
 	if umErr == nil {
 		*KeystoreName = SettingDada.Default_keystore
 		if SettingDada.Create_backups == 0 {
+			fmt.Println("Warning! backup is disabled")
 			DoBackup = false
 		}
 	}
