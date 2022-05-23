@@ -613,7 +613,11 @@ func main() {
 		panic(err)
 	}
 	exPath := filepath.Dir(ex)
-	jsonSettingsFile, jsonSettingsFileErr := os.Open(exPath + "\\settings.json")
+	pathseparator := "/"
+	if runtime.GOOS == "windows" {
+		pathseparator = "\\"
+	}
+	jsonSettingsFile, jsonSettingsFileErr := os.Open(exPath + pathseparator + "settings.json")
 	if jsonSettingsFileErr != nil {
 		fmt.Println(jsonSettingsFileErr)
 	}
