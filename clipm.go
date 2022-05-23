@@ -554,13 +554,13 @@ func ShowRes(CurrentResourceInGroup ResourceItem, KeystorePassword string) {
 
 func FindResorceByText(Gr *KeystoreData, TextToFind string) (err error, Resource ResourceItem, GroupName string) {
 	FidText := strings.TrimSpace(strings.ToLower(TextToFind))
-	for GrIndex, GrName := range Gr.Groups {
-		for ResIndex, Res := range GrName.Resources {
-			if strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].Name)), FidText) ||
-				strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].Ipaddr)), FidText) ||
-				strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].FQDN)), FidText) ||
-				strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].Username)), FidText) ||
-				strings.Contains(strings.TrimSpace(strings.ToLower(Gr.Groups[GrIndex].Resources[ResIndex].Description)), FidText) {
+	for _, GrName := range Gr.Groups {
+		for _, Res := range GrName.Resources {
+			if strings.Contains(strings.TrimSpace(strings.ToLower(Res.Name)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(Res.Ipaddr)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(Res.FQDN)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(Res.Username)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(Res.Description)), FidText) {
 				return nil, Res, GrName.Groupname
 			}
 		}
@@ -590,7 +590,7 @@ func main() {
 	MakeUnencryptedXML := flag.String("makexml", "", "Make unencrypted xml file")
 	Description := flag.String("d", "", "Description")
 	ChangeMasterPassword := flag.Bool("passwd", false, "Change Master password for datastore")
-	FindResources := flag.String("find", "", "Find resources by text")
+	FindResources := flag.String("find", "", "Find resources (all fields except passwords) by text, no case sensivity")
 	flag.Parse()
 
 	DoBackup := true
@@ -635,8 +635,11 @@ func main() {
 		fmt.Println(Er)
 	}
 
-	if len(*FindResources) > 3 {
-		Ferr, Fres, Fgroup := FindResorceByText(Gr, KeystorePassword)
+	if len(*FindResources) >= 3 {
+		MessageToCons := fmt.Sprintf("Find resource by text \"%s\"in all field except password, no case sensivity", *FindResources)
+		fmt.Println(MessageToCons)
+		Ferr, Fres, Fgroup := FindResorceByText(Gr, *FindResources)
+		fmt.Println(Ferr, Fres, Fgroup)
 		if Ferr != nil {
 			fmt.Println(Ferr)
 			os.Exit(1)
