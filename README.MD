@@ -93,4 +93,4 @@ New features:
 
 Binary:
 Windows: clipm.exe
-Linux: clipm (will need make it executable by chmod)
+Linux: clipm (will need make it executable by chmod +h clipm)
