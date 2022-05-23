@@ -20,6 +20,8 @@ Delete resource
 Delete empty group
 -edit
 Edit resource
+-find string
+Find resources by text
 -fqdn string
 Resource FQDN adress
 -g string
@@ -43,17 +45,19 @@ Second password (for example, Cisco enable password)
 Provide group name -g and resource name -n
 -u string
 Username
+-d string
+Description
 -h Print help
 
 Example command:
     add resource:
-        clipm.exe -keystore mainkeystore.json -add -g Group1 -n CiscoSw_01 -i 192.168.1.58 -u CiscoAdm -p CiP@$$1 -p2 CiEnableP@$$1
+        clipm.exe -keystore mainkeystore.json -add -g Group1 -n CiscoSw_01 -i 192.168.1.58 -u CiscoAdm -p CiP@$$1 -p2 CiEnableP@$$1 -d "CiscoSw"
     dlete resource:
         clipm.exe -keystore mainkeystore.json -delete -g Group1 -n CiscoSw_01
     dlete empty group:
             clipm.exe -keystore mainkeystore.json -deletegroup -g Group1
     edit resource:
-        clipm.exe -keystore mainkeystore.json -edit -g Group1 -n CiscoSw_01 -i 192.168.1.58 -u CiscoAdm -p CiP@$$2 -p2 CiEnableP@$$2
+        clipm.exe -keystore mainkeystore.json -edit -g Group1 -n CiscoSw_01 -i 192.168.1.58 -u CiscoAdm -p CiP@$$2 -p2 CiEnableP@$$2 -d "CiscoSw"
     show resource:
         clipm.exe -keystore mainkeystore.json -show -g Group1 -n CiscoSw_01
     list groups and resources:
@@ -68,11 +72,21 @@ Example command:
             |  |-- Demoresource
             |-- cisco
                |-- core_sw01
+    find resources:
+        clipm.exe -keystore mainkeystore.json -find 192.168.0.1
+            Find resource by text "192.168.0.1"in all field except password, no case sensivity
+            ======================================================================
+            Resources int group: Default
+            ----------------------------------------------------------------------
+            Name            : Demoresource
+            IP address      : 192.168.0.1
+            FQDN            : DemoCisco.yourdomain.local
+            Username        : Cisco
+            Password        : Cisco
+            Second password : Cisco123%
+            Description     : Cisco switch
+    In all command, You can leave keystore parameter (default keystore will be use)
 
-PS:
-What I will want to add in the future:
-1. Backup file. (added backup file to "backup" folder, after open keystore)
-   Added. Also added file settings.json, if parameter Create_backups > 0 then will make backups
-2. Check IP and FQDN data (added check IP addresses but not FQDN)
-3. More tests (found bug when delete group and fixed it)
-added parameter Default_keystore in settings.json for provide default keystore name (json file name)
+New features:
+    added parameter Default_keystore in settings.json for provide default keystore name (json file name)
+    added parameter Create_backups in settings.json. If this parameter 0 - no backups will be make
