@@ -96,6 +96,11 @@ func AddData(GroupName string, Name string, Ip string, Fqdn string, Username str
 	return nil
 }
 
+type FindRes struct {
+	Groupname           string
+	ResourcesInTheGroup []ResourceItem
+}
+
 func EditResource(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, Description string, KSdata *KeystoreData, keystorepassword string) error {
 	EncryptedPassword1, _ := EncryptPassword(Password, keystorepassword)
 	EncryptedPassword2, _ := EncryptPassword(Password2, keystorepassword)
@@ -552,21 +557,29 @@ func ShowRes(CurrentResourceInGroup ResourceItem, KeystorePassword string) {
 	fmt.Println("Description\t:", CurrentResourceInGroup.Description)
 }
 
-func FindResorceByText(Gr *KeystoreData, TextToFind string) (err error, Resource ResourceItem, GroupName string) {
+func FindResorceByText(Gr *KeystoreData, TextToFind string) (err error, Res []FindRes) {
 	FidText := strings.TrimSpace(strings.ToLower(TextToFind))
+	var RetErr error
+	RsRet := make([]FindRes, 0)
 	for _, GrName := range Gr.Groups {
-		for _, Res := range GrName.Resources {
-			if strings.Contains(strings.TrimSpace(strings.ToLower(Res.Name)), FidText) ||
-				strings.Contains(strings.TrimSpace(strings.ToLower(Res.Ipaddr)), FidText) ||
-				strings.Contains(strings.TrimSpace(strings.ToLower(Res.FQDN)), FidText) ||
-				strings.Contains(strings.TrimSpace(strings.ToLower(Res.Username)), FidText) ||
-				strings.Contains(strings.TrimSpace(strings.ToLower(Res.Description)), FidText) {
-				return nil, Res, GrName.Groupname
+		RsRetInG := make([]ResourceItem, 0)
+		for _, ResCninG := range GrName.Resources {
+			if strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.Name)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.Ipaddr)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.FQDN)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.Username)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.Description)), FidText) {
+				RsRetInG = append(RsRetInG, ResCninG)
 			}
 		}
+		if len(RsRetInG) > 0 {
+			RsRet = append(RsRet, FindRes{GrName.Groupname, RsRetInG})
+		}
 	}
-	ErrTextIs := fmt.Errorf("Error: %s", "Resource not found")
-	return ErrTextIs, Resource, ""
+	if len(RsRet) == 0 {
+		RetErr = fmt.Errorf("Error: %s", "Resource not found")
+	}
+	return RetErr, RsRet
 }
 
 func main() {
@@ -638,13 +651,20 @@ func main() {
 	if len(*FindResources) >= 3 {
 		MessageToCons := fmt.Sprintf("Find resource by text \"%s\"in all field except password, no case sensivity", *FindResources)
 		fmt.Println(MessageToCons)
-		Ferr, Fres, Fgroup := FindResorceByText(Gr, *FindResources)
+		Ferr, Fres := FindResorceByText(Gr, *FindResources)
 		if Ferr != nil {
 			fmt.Println(Ferr)
 			os.Exit(1)
 		}
-		fmt.Println("Found resource in the group:", Fgroup)
-		ShowRes(Fres, KeystorePassword)
+		for _, FResCurrent := range Fres {
+			fmt.Println("======================================================================")
+			fmt.Println("Resources int group:", FResCurrent.Groupname)
+			for _, FresInTheGroupCurrent := range FResCurrent.ResourcesInTheGroup {
+				fmt.Println("----------------------------------------------------------------------")
+				ShowRes(FresInTheGroupCurrent, KeystorePassword)
+			}
+		}
+		os.Exit(0)
 	}
 
 	if *ChangeMasterPassword {
