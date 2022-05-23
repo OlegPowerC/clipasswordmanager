@@ -237,7 +237,7 @@ func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 			NewResource.Description = Description
 		}
 
-		AddErr := AddData(GroupName, NewResource.Name, NewResource.Ipaddr, NewResource.FQDN, NewResource.Username, NewResource.Password, NewResource.Password2, Description, KSdata, keystorepassword)
+		AddErr := AddData(GroupName, NewResource.Name, NewResource.Ipaddr, NewResource.FQDN, NewResource.Username, NewResource.Password, NewResource.Password2, NewResource.Description, KSdata, keystorepassword)
 		if AddErr != nil {
 			return fmt.Errorf("Error while adding: %s", AddErr)
 		}
