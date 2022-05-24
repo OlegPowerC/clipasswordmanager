@@ -654,6 +654,10 @@ func main() {
 		UseCmdFlagNumber++
 	}
 	if len(*Flagcopy) > 0 {
+		if len(*Flagcopy) <= 3 {
+			fmt.Println("Name length of the source resource must be at least 3 characters long")
+			os.Exit(1)
+		}
 		if len(*Flagname) == 0 {
 			fmt.Println("You must provide resource name")
 			os.Exit(1)
