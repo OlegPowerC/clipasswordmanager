@@ -142,19 +142,31 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 		if len(Ip) > 7 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Ipaddr = Ip
 		}
-		if len(Fqdn) > 3 {
+		if len(Fqdn) >= 7 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].FQDN = Fqdn
+		} else {
+			fmt.Println("FQDN length must at least 7 characters long")
+			os.Exit(1)
 		}
-		if len(Username) > 3 {
+		if len(Username) >= 3 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Username = Username
+		} else {
+			fmt.Println("Username length must at least 3 characters long")
+			os.Exit(1)
 		}
-		if len(Password) > 3 {
+		if len(Password) >= 3 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password = EncryptedPassword1
+		} else {
+			fmt.Println("Password length must at least 3 characters long")
+			os.Exit(1)
 		}
-		if len(Password2) > 3 {
+		if len(Password2) >= 3 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password2 = EncryptedPassword2
+		} else {
+			fmt.Println("Password2 length must at least 3 characters long")
+			os.Exit(1)
 		}
-		if len(Description) > 1 {
+		if len(Description) > 0 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Description = Description
 		}
 	}
@@ -213,10 +225,10 @@ func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 		if len(Ip) > 7 {
 			NewResource.Ipaddr = Ip
 		}
-		if len(Fqdn) > 3 {
+		if len(Fqdn) >= 3 {
 			NewResource.FQDN = Fqdn
 		}
-		if len(Username) > 3 {
+		if len(Username) >= 3 {
 			NewResource.Username = Username
 		}
 		if len(NewResource.Password) > 8 {
@@ -226,14 +238,14 @@ func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 			NewResource.Password2, _ = DecryptPassword(NewResource.Password2, keystorepassword)
 		}
 
-		if len(Password) > 3 {
+		if len(Password) >= 3 {
 			NewResource.Password = Password
 		}
-		if len(Password2) > 3 {
+		if len(Password2) >= 3 {
 			NewResource.Password2 = Password2
 		}
 
-		if len(Description) > 1 {
+		if len(Description) >= 1 {
 			NewResource.Description = Description
 		}
 
@@ -893,7 +905,7 @@ func main() {
 
 		os.Exit(0)
 	}
-	if len(*Flagcopy) > 3 {
+	if len(*Flagcopy) > 0 {
 		if CheckFlag("n") {
 			CopyErr := CopyResource(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, *Description, Gr, KeystorePassword, *Flagcopy)
 			if CopyErr != nil {
