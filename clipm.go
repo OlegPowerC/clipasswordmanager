@@ -607,11 +607,43 @@ func main() {
 	flag.Parse()
 
 	DoBackup := true
+	UseCmdFlagNumber := 0
 
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
 	}
+
+	//Проверка комманд
+	if len(*FindResources) > 0 {
+		UseCmdFlagNumber++
+	}
+	if *Showresource {
+		UseCmdFlagNumber++
+	}
+	if *Flagdelete {
+		UseCmdFlagNumber++
+	}
+	if len(*Flagcopy) > 0 {
+		UseCmdFlagNumber++
+	}
+	if *Flageditresource {
+		UseCmdFlagNumber++
+	}
+
+	if *Flagdeleteemptygp {
+		UseCmdFlagNumber++
+	}
+
+	if UseCmdFlagNumber == 0 {
+		fmt.Println("You need to provide command flag (-show, -delete, -edit, -deletegroup, -find or -copy)")
+		os.Exit(1)
+	}
+	if UseCmdFlagNumber > 1 {
+		fmt.Println("You can provide only one command flag  in single operation")
+		os.Exit(1)
+	}
+
 	exPath := filepath.Dir(ex)
 	pathseparator := "/"
 	if runtime.GOOS == "windows" {
