@@ -619,9 +619,17 @@ func main() {
 		UseCmdFlagNumber++
 	}
 	if *Showresource {
+		if len(*Flagname) == 0 {
+			fmt.Println("You must provide resource name")
+			os.Exit(1)
+		}
 		UseCmdFlagNumber++
 	}
 	if *Flagdelete {
+		if len(*Flagname) == 0 {
+			fmt.Println("You must provide resource name")
+			os.Exit(1)
+		}
 		UseCmdFlagNumber++
 	}
 	if *Listgroup {
@@ -634,13 +642,25 @@ func main() {
 		UseCmdFlagNumber++
 	}
 	if len(*Flagcopy) > 0 {
+		if len(*Flagname) == 0 {
+			fmt.Println("You must provide resource name")
+			os.Exit(1)
+		}
 		UseCmdFlagNumber++
 	}
 	if *Flageditresource {
+		if len(*Flagname) == 0 {
+			fmt.Println("You must provide resource name")
+			os.Exit(1)
+		}
 		UseCmdFlagNumber++
 	}
 
 	if *Flagdeleteemptygp {
+		if len(*Flaggroupname) == 0 {
+			fmt.Println("You must provide group name (group must be empty)")
+			os.Exit(1)
+		}
 		UseCmdFlagNumber++
 	}
 
