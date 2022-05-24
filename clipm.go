@@ -624,6 +624,15 @@ func main() {
 	if *Flagdelete {
 		UseCmdFlagNumber++
 	}
+	if *Listgroup {
+		UseCmdFlagNumber++
+	}
+	if *Listresourcesingroup {
+		UseCmdFlagNumber++
+	}
+	if *ListAll {
+		UseCmdFlagNumber++
+	}
 	if len(*Flagcopy) > 0 {
 		UseCmdFlagNumber++
 	}
@@ -636,7 +645,7 @@ func main() {
 	}
 
 	if UseCmdFlagNumber == 0 {
-		fmt.Println("You need to provide command flag (-show, -delete, -edit, -deletegroup, -find or -copy)")
+		fmt.Println("You need to provide command flag (-show, -delete, -edit, -deletegroup, -l, -lg, -lrg, -find or -copy)")
 		os.Exit(1)
 	}
 	if UseCmdFlagNumber > 1 {
