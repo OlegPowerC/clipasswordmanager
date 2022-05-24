@@ -641,6 +641,11 @@ func main() {
 		if len(*Flagname) == 0 {
 			fmt.Println("You must provide resource name")
 			os.Exit(1)
+		} else {
+			if len(*Flagname) <= 3 {
+				fmt.Println("Name length must be at least 3 characters long")
+				os.Exit(1)
+			}
 		}
 		UseCmdFlagNumber++
 	}
@@ -661,6 +666,11 @@ func main() {
 		if len(*Flagname) == 0 {
 			fmt.Println("You must provide resource name")
 			os.Exit(1)
+		} else {
+			if len(*Flagname) <= 3 {
+				fmt.Println("Name length must be at least 3 characters long")
+				os.Exit(1)
+			}
 		}
 		UseCmdFlagNumber++
 	}
