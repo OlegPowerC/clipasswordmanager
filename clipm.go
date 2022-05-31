@@ -142,30 +142,42 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 		if len(Ip) > 7 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Ipaddr = Ip
 		}
-		if len(Fqdn) >= 7 {
-			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].FQDN = Fqdn
-		} else {
-			fmt.Println("FQDN length must at least 7 characters long")
-			os.Exit(1)
+		if len(Fqdn) > 0 {
+			if len(Fqdn) >= 7 {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].FQDN = Fqdn
+			} else {
+				fmt.Println("FQDN length must at least 7 characters long")
+				os.Exit(1)
+			}
 		}
-		if len(Username) >= 3 {
-			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Username = Username
-		} else {
-			fmt.Println("Username length must at least 3 characters long")
-			os.Exit(1)
+
+		if len(Username) > 0 {
+			if len(Username) >= 3 {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Username = Username
+			} else {
+				fmt.Println("Username length must at least 3 characters long")
+				os.Exit(1)
+			}
 		}
-		if len(Password) >= 3 {
-			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password = EncryptedPassword1
-		} else {
-			fmt.Println("Password length must at least 3 characters long")
-			os.Exit(1)
+
+		if len(Password) > 0 {
+			if len(Password) >= 3 {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password = EncryptedPassword1
+			} else {
+				fmt.Println("Password length must at least 3 characters long")
+				os.Exit(1)
+			}
 		}
-		if len(Password2) >= 3 {
-			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password2 = EncryptedPassword2
-		} else {
-			fmt.Println("Password2 length must at least 3 characters long")
-			os.Exit(1)
+
+		if len(Password2) > 0 {
+			if len(Password2) >= 3 {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password2 = EncryptedPassword2
+			} else {
+				fmt.Println("Password2 length must at least 3 characters long")
+				os.Exit(1)
+			}
 		}
+
 		if len(Description) > 0 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Description = Description
 		}
@@ -642,6 +654,18 @@ func main() {
 		}
 		UseCmdFlagNumber++
 	}
+	if *Flagaddresource {
+		if len(*Flagname) == 0 {
+			fmt.Println("You must provide resource name")
+			os.Exit(1)
+		} else {
+			if len(*Flagname) < 3 {
+				fmt.Println("Name length must be at least 3 characters long")
+				os.Exit(1)
+			}
+		}
+		UseCmdFlagNumber++
+	}
 	if *Flagdelete {
 		if len(*Flagname) == 0 {
 			fmt.Println("You must provide resource name")
@@ -701,7 +725,7 @@ func main() {
 	}
 
 	if UseCmdFlagNumber == 0 {
-		fmt.Println("You need to provide command flag (-show, -delete, -edit, -deletegroup, -l, -lg, -lrg, -find or -copy)")
+		fmt.Println("You need to provide command flag (-add -show, -delete, -edit, -deletegroup, -l, -lg, -lrg, -find or -copy)")
 		os.Exit(1)
 	}
 	if UseCmdFlagNumber > 1 {
