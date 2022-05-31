@@ -142,12 +142,17 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 		if len(Ip) > 7 {
 			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Ipaddr = Ip
 		}
+
 		if len(Fqdn) > 0 {
 			if len(Fqdn) >= 7 {
 				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].FQDN = Fqdn
 			} else {
-				fmt.Println("FQDN length must at least 7 characters long")
-				os.Exit(1)
+				if len(Fqdn) == 1 && Fqdn == " " {
+					(*KSdata).Groups[FGindFinded].Resources[FRindFinded].FQDN = ""
+				} else {
+					fmt.Println("FQDN length must at least 7 characters long")
+					os.Exit(1)
+				}
 			}
 		}
 
