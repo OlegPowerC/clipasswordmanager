@@ -729,8 +729,12 @@ func main() {
 		UseCmdFlagNumber++
 	}
 
+	if len(*MakeUnencryptedXML) > 0 {
+		UseCmdFlagNumber++
+	}
+
 	if UseCmdFlagNumber == 0 {
-		fmt.Println("You need to provide command flag (-add -show, -delete, -edit, -deletegroup, -l, -lg, -lrg, -find or -copy)")
+		fmt.Println("You need to provide command flag (-add -show, -delete, -edit, -deletegroup, -l, -lg, -lrg, -find, -copy or -makexml)")
 		os.Exit(1)
 	}
 	if UseCmdFlagNumber > 1 {
