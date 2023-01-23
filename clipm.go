@@ -7,7 +7,7 @@ import (
 	"flag"
 	"fmt"
 	Psstr "github.com/OlegPowerC/aespassstore"
-	CheckIpAddrs "github.com/OlegPowerC/validate_ipaddresses"
+	CheckIpAddrs "github.com/OlegPowerC/validateip"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"os"
@@ -30,17 +30,24 @@ type Settings struct {
 }
 
 type UnXmlKeystoreData struct {
-	Groups []Group `json:"groups"`
+	Groups []Group `json:"groups" xml:"groups"`
 }
 
 type ResourceItem struct {
-	Ipaddr      string `json:"ipaddr" xml:"ipaddr"`
-	Name        string `json:"name" xml:"name"`
-	FQDN        string `json:"fqdn" xml:"fqdn"`
-	Username    string `json:"username" xml:"username"`
-	Password    string `json:"password" xml:"password"`
-	Password2   string `json:"password_2" xml:"password_2"`
-	Description string `json:"description" xml:"description"`
+	Ipaddr          string `json:"ipaddr" xml:"ipaddr"`
+	Name            string `json:"name" xml:"name"`
+	FQDN            string `json:"fqdn" xml:"fqdn"`
+	Username        string `json:"username" xml:"username"`
+	Password        string `json:"password" xml:"password"`
+	EnablePassword  string `json:"enable_password" xml:"enable_password"`
+	SNMPver         int    `json:"snmp_ver" xml:"snmp_ver"`
+	SNMPv3USM       string `json:"snmpv3_usm" xml:"snmpv3_usm"`
+	SNMPv3AuthProto string `json:"snmpv3_auth_proto"`
+	SNMPv3Auth      string `json:"snmpv3_auth"`
+	SNMPv3PrivProto string `json:"snmpv3_priv_proto" xml:"snmpv3_priv_proto"`
+	SNMPv3Priv      string `json:"snmpv3_priv" xml:"snmpv3_priv"`
+	SNMPv2Community string `json:"snmpv2_community" xml:"snmpv2_community"`
+	Description     string `json:"description" xml:"description"`
 }
 
 type Group struct {
@@ -48,9 +55,28 @@ type Group struct {
 	Resources []ResourceItem `json:"resources" xml:"resources"`
 }
 
-func AddData(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, Description string, KSData *KeystoreData, keystorepassword string) error {
+func AddData(GroupName string,
+	Name string,
+	Ip string,
+	Fqdn string,
+	Username string,
+	Password string,
+	Password2 string,
+	SNMPver int,
+	SNMPv3USM string,
+	SNMPv3AuthProto string,
+	SNMPv3Auth string,
+	SNMPv3PrivProto string,
+	SNMPv3Priv string,
+	SNMPv2Community string,
+	Description string,
+	KSData *KeystoreData,
+	keystorepassword string) error {
 	EncryptedPassword1, _ := EncryptPassword(Password, keystorepassword)
 	EncryptedPassword2, _ := EncryptPassword(Password2, keystorepassword)
+	EncryptedSnmpAuth, _ := EncryptPassword(SNMPv3Auth, keystorepassword)
+	EncryptedSnmpPriv, _ := EncryptPassword(SNMPv3Priv, keystorepassword)
+	EncryptedSnmpCommunity, _ := EncryptPassword(SNMPv2Community, keystorepassword)
 
 	var ResourceItemNewData ResourceItem
 	FGindFinded := -1
@@ -77,7 +103,14 @@ func AddData(GroupName string, Name string, Ip string, Fqdn string, Username str
 	ResourceItemNewData.FQDN = Fqdn
 	ResourceItemNewData.Username = Username
 	ResourceItemNewData.Password = EncryptedPassword1
-	ResourceItemNewData.Password2 = EncryptedPassword2
+	ResourceItemNewData.EnablePassword = EncryptedPassword2
+	ResourceItemNewData.SNMPver = SNMPver
+	ResourceItemNewData.SNMPv3USM = SNMPv3USM
+	ResourceItemNewData.SNMPv3AuthProto = SNMPv3AuthProto
+	ResourceItemNewData.SNMPv3Auth = EncryptedSnmpAuth
+	ResourceItemNewData.SNMPv3PrivProto = SNMPv3PrivProto
+	ResourceItemNewData.SNMPv3Priv = EncryptedSnmpPriv
+	ResourceItemNewData.SNMPv2Community = EncryptedSnmpCommunity
 	ResourceItemNewData.Description = Description
 	if FGindFinded >= 0 {
 		for _, ResourceCheck := range (*KSData).Groups[FGindFinded].Resources {
@@ -101,9 +134,28 @@ type FindRes struct {
 	ResourcesInTheGroup []ResourceItem
 }
 
-func EditResource(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, Description string, KSdata *KeystoreData, keystorepassword string) error {
+func EditResource(GroupName string,
+	Name string,
+	Ip string,
+	Fqdn string,
+	Username string,
+	Password string,
+	Password2 string,
+	SNMPver int,
+	SNMPv3USM string,
+	SNMPv3AuthProto string,
+	SNMPv3Auth string,
+	SNMPv3PrivProto string,
+	SNMPv3Priv string,
+	SNMPv2Community string,
+	Description string,
+	KSdata *KeystoreData,
+	keystorepassword string) error {
 	EncryptedPassword1, _ := EncryptPassword(Password, keystorepassword)
 	EncryptedPassword2, _ := EncryptPassword(Password2, keystorepassword)
+	EncryptedSnmpAuth, _ := EncryptPassword(SNMPv3Auth, keystorepassword)
+	EncryptedSnmpPriv, _ := EncryptPassword(SNMPv3Priv, keystorepassword)
+	EncryptedSnmpCommunity, _ := EncryptPassword(SNMPv2Community, keystorepassword)
 
 	if len(Name) < 3 {
 		return fmt.Errorf("No name of the resource")
@@ -165,6 +217,15 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 			}
 		}
 
+		if len(SNMPv3USM) > 0 {
+			if len(SNMPv3USM) >= 3 {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].SNMPv3USM = SNMPv3USM
+			} else {
+				fmt.Println("SNMP v3 Username length must at least 3 characters long")
+				os.Exit(1)
+			}
+		}
+
 		if len(Password) > 0 {
 			if len(Password) >= 3 {
 				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password = EncryptedPassword1
@@ -176,9 +237,60 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 
 		if len(Password2) > 0 {
 			if len(Password2) >= 3 {
-				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].Password2 = EncryptedPassword2
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].EnablePassword = EncryptedPassword2
 			} else {
 				fmt.Println("Password2 length must at least 3 characters long")
+				os.Exit(1)
+			}
+		}
+
+		if SNMPver > 0 && SNMPver < 4 {
+			(*KSdata).Groups[FGindFinded].Resources[FRindFinded].SNMPver = SNMPver
+		}
+
+		if len(SNMPv3AuthProto) > 0 {
+			SNMPv3AuthProto = strings.ToLower(SNMPv3AuthProto)
+			if SNMPv3AuthProto != "md5" && SNMPv3AuthProto != "sha" && SNMPv3AuthProto != "none" {
+				fmt.Println("SNMPv3 auth protocol must be md5, sha or none, but you provide:", SNMPv3AuthProto)
+				os.Exit(1)
+			} else {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].SNMPv3AuthProto = SNMPv3AuthProto
+			}
+		}
+
+		if len(SNMPv3PrivProto) > 0 {
+			SNMPv3PrivProto = strings.ToLower(SNMPv3PrivProto)
+			if SNMPv3PrivProto != "des" && SNMPv3PrivProto != "aes" && SNMPv3PrivProto != "none" {
+				fmt.Println("SNMPv3 priv protocol must be des, aes or none but you provide:", SNMPv3PrivProto)
+				os.Exit(1)
+			} else {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].SNMPv3PrivProto = SNMPv3PrivProto
+			}
+		}
+
+		if len(SNMPv3Auth) > 0 {
+			if len(SNMPv3Auth) >= 3 {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].SNMPv3Auth = EncryptedSnmpAuth
+			} else {
+				fmt.Println("SNMPv3 auth key length must at least 3 characters long")
+				os.Exit(1)
+			}
+		}
+
+		if len(SNMPv3Priv) > 0 {
+			if len(SNMPv3Priv) >= 3 {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].SNMPv3Priv = EncryptedSnmpPriv
+			} else {
+				fmt.Println("SNMPv3 priv key length must at least 3 characters long")
+				os.Exit(1)
+			}
+		}
+
+		if len(SNMPv2Community) > 0 {
+			if len(SNMPv2Community) >= 3 {
+				(*KSdata).Groups[FGindFinded].Resources[FRindFinded].SNMPv2Community = EncryptedSnmpCommunity
+			} else {
+				fmt.Println("SNMPv2 community string length must at least 3 characters long")
 				os.Exit(1)
 			}
 		}
@@ -193,7 +305,24 @@ func EditResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 	return nil
 }
 
-func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Username string, Password string, Password2 string, Description string, KSdata *KeystoreData, keystorepassword string, NewName string) error {
+func CopyResource(GroupName string,
+	Name string,
+	Ip string,
+	Fqdn string,
+	Username string,
+	Password string,
+	Password2 string,
+	SNMPver int,
+	SNMPv3USM string,
+	SNMPv3AuthProto string,
+	SNMPv3Auth string,
+	SNMPv3PrivProto string,
+	SNMPv3Priv string,
+	SNMPv2Community string,
+	Description string,
+	KSdata *KeystoreData,
+	keystorepassword string,
+	NewName string) error {
 	//EncryptedPassword1, _ := EncryptPassword(Password, keystorepassword)
 	//EncryptedPassword2, _ := EncryptPassword(Password2, keystorepassword)
 
@@ -239,34 +368,79 @@ func CopyResource(GroupName string, Name string, Ip string, Fqdn string, Usernam
 
 		NewResource.Name = NewName
 
-		if len(Ip) > 7 {
+		if len(Ip) > 0 {
 			NewResource.Ipaddr = Ip
 		}
-		if len(Fqdn) >= 3 {
+		if len(Fqdn) > 0 {
 			NewResource.FQDN = Fqdn
 		}
-		if len(Username) >= 3 {
+		if len(Username) > 0 {
 			NewResource.Username = Username
+		}
+		if len(SNMPv3USM) > 0 {
+			NewResource.SNMPv3USM = SNMPv3USM
+		}
+		if SNMPver > 0 {
+			NewResource.SNMPver = SNMPver
+		}
+		if len(SNMPv3AuthProto) > 0 {
+			NewResource.SNMPv3AuthProto = SNMPv3AuthProto
+		}
+		if len(SNMPv3PrivProto) > 0 {
+			NewResource.SNMPv3PrivProto = SNMPv3PrivProto
 		}
 		if len(NewResource.Password) > 8 {
 			NewResource.Password, _ = DecryptPassword(NewResource.Password, keystorepassword)
 		}
-		if len(NewResource.Password2) > 8 {
-			NewResource.Password2, _ = DecryptPassword(NewResource.Password2, keystorepassword)
+		if len(NewResource.EnablePassword) > 8 {
+			NewResource.EnablePassword, _ = DecryptPassword(NewResource.EnablePassword, keystorepassword)
+		}
+		if len(NewResource.SNMPv3Auth) > 8 {
+			NewResource.SNMPv3Auth, _ = DecryptPassword(NewResource.SNMPv3Auth, keystorepassword)
+		}
+		if len(NewResource.SNMPv3Priv) > 8 {
+			NewResource.SNMPv3Priv, _ = DecryptPassword(NewResource.SNMPv3Priv, keystorepassword)
+		}
+		if len(NewResource.SNMPv2Community) > 8 {
+			NewResource.SNMPv2Community, _ = DecryptPassword(NewResource.SNMPv2Community, keystorepassword)
 		}
 
 		if len(Password) >= 3 {
 			NewResource.Password = Password
 		}
 		if len(Password2) >= 3 {
-			NewResource.Password2 = Password2
+			NewResource.EnablePassword = Password2
+		}
+		if len(SNMPv3Auth) >= 3 {
+			NewResource.Password = SNMPv3Auth
+		}
+		if len(SNMPv3Priv) >= 3 {
+			NewResource.EnablePassword = SNMPv3Priv
+		}
+		if len(SNMPv2Community) >= 3 {
+			NewResource.EnablePassword = SNMPv2Community
 		}
 
 		if len(Description) >= 1 {
 			NewResource.Description = Description
 		}
 
-		AddErr := AddData(GroupName, NewResource.Name, NewResource.Ipaddr, NewResource.FQDN, NewResource.Username, NewResource.Password, NewResource.Password2, NewResource.Description, KSdata, keystorepassword)
+		AddErr := AddData(GroupName,
+			NewResource.Name,
+			NewResource.Ipaddr,
+			NewResource.FQDN,
+			NewResource.Username,
+			NewResource.Password,
+			NewResource.EnablePassword,
+			NewResource.SNMPver,
+			NewResource.SNMPv3USM,
+			NewResource.SNMPv3AuthProto,
+			NewResource.SNMPv3Auth,
+			NewResource.SNMPv3PrivProto,
+			NewResource.SNMPv3Priv,
+			NewResource.SNMPv2Community,
+			NewResource.Description,
+			KSdata, keystorepassword)
 		if AddErr != nil {
 			return fmt.Errorf("Error while adding: %s", AddErr)
 		}
@@ -463,7 +637,21 @@ func checkFile(filename string, keystorepassword string, doBackup bool) (error, 
 			FJSdata.Encryptedpasswords = false
 			FJSdata.Magicphrase = ""
 		}
-		AddData("Default", "Demoresource", "192.168.0.1", "DemoCisco.yourdomain.local", "Cisco", "Cisco", "Cisco123%", "Demo resource", &FJSdata, keystorepassword)
+		AddData("Default",
+			"Demoresource",
+			"192.168.0.1",
+			"DemoCisco.yourdomain.local",
+			"Cisco",
+			"Cisco",
+			"Cisco123%", 3,
+			"snmpv3-user",
+			"sha",
+			"authkey123",
+			"aes",
+			"privkey123",
+			"",
+			"Demo resource",
+			&FJSdata, keystorepassword)
 
 		jsondata, _ := json.Marshal(&FJSdata)
 		_, err := os.Create(filename)
@@ -530,7 +718,8 @@ func MakePlainetxXML(UnexcryptedXmlFilename string, Gr *KeystoreData, KeystorePa
 			XMLResource.Ipaddr = Res.Ipaddr
 			XMLResource.Username = Res.Username
 			XMLResource.Password, _ = DecryptPassword(Res.Password, KeystorePassword)
-			XMLResource.Password2, _ = DecryptPassword(Res.Password2, KeystorePassword)
+			XMLResource.EnablePassword, _ = DecryptPassword(Res.EnablePassword, KeystorePassword)
+			XMLResource.Description = Res.Description
 			XMLSources = append(XMLSources, XMLResource)
 		}
 		XMLitem.Resources = XMLSources
@@ -538,7 +727,7 @@ func MakePlainetxXML(UnexcryptedXmlFilename string, Gr *KeystoreData, KeystorePa
 	}
 	XMLData.Groups = XMLItems
 	if len(XMLItems) > 0 {
-		jsondata, _ := xml.Marshal(&XMLItems)
+		jsondata, _ := xml.Marshal(&XMLData)
 		_, err := os.Create(UnexcryptedXmlFilename)
 		if err != nil {
 			return err
@@ -553,7 +742,11 @@ func ChangePassword(Gr *KeystoreData, KeystoreOldPassword string, KeystoreNewPas
 	for GrIndex, GrName := range Gr.Groups {
 		for ResIndex, Res := range GrName.Resources {
 			Password, _ := DecryptPassword(Res.Password, KeystoreOldPassword)
-			Password2, _ := DecryptPassword(Res.Password2, KeystoreOldPassword)
+			Password2, _ := DecryptPassword(Res.EnablePassword, KeystoreOldPassword)
+			SNMPv3Auth, _ := DecryptPassword(Res.SNMPv3Auth, KeystoreOldPassword)
+			SNMPv3Priv, _ := DecryptPassword(Res.SNMPv3Priv, KeystoreOldPassword)
+			SNMPv2Community, _ := DecryptPassword(Res.SNMPv2Community, KeystoreOldPassword)
+
 			NewEncpassword, NewEncErrpassword := EncryptPassword(Password, KeystoreNewPassword)
 			if NewEncErrpassword != nil {
 				return NewEncErrpassword
@@ -562,8 +755,24 @@ func ChangePassword(Gr *KeystoreData, KeystoreOldPassword string, KeystoreNewPas
 			if NewEncErrpassword2 != nil {
 				return NewEncErrpassword2
 			}
+			NewSNMPv3Auth, NewSNMPv3AuthErr := EncryptPassword(SNMPv3Auth, KeystoreNewPassword)
+			if NewSNMPv3AuthErr != nil {
+				return NewSNMPv3AuthErr
+			}
+			NewSNMPv3Priv, NewSNMPv3PrivErr := EncryptPassword(SNMPv3Priv, KeystoreNewPassword)
+			if NewSNMPv3PrivErr != nil {
+				return NewSNMPv3PrivErr
+			}
+			NewSNMPv2Community, NewSNMPv2CommunityErr := EncryptPassword(SNMPv2Community, KeystoreNewPassword)
+			if NewSNMPv2CommunityErr != nil {
+				return NewSNMPv2CommunityErr
+			}
+
 			Gr.Groups[GrIndex].Resources[ResIndex].Password = NewEncpassword
-			Gr.Groups[GrIndex].Resources[ResIndex].Password2 = NewEncpassword2
+			Gr.Groups[GrIndex].Resources[ResIndex].EnablePassword = NewEncpassword2
+			Gr.Groups[GrIndex].Resources[ResIndex].SNMPv3Auth = NewSNMPv3Auth
+			Gr.Groups[GrIndex].Resources[ResIndex].SNMPv3Priv = NewSNMPv3Priv
+			Gr.Groups[GrIndex].Resources[ResIndex].SNMPv2Community = NewSNMPv2Community
 		}
 	}
 	PasswordHash := sha1.New()
@@ -575,14 +784,24 @@ func ChangePassword(Gr *KeystoreData, KeystoreOldPassword string, KeystoreNewPas
 }
 
 func ShowRes(CurrentResourceInGroup ResourceItem, KeystorePassword string) {
+	PlainPassword, _ := DecryptPassword(CurrentResourceInGroup.Password, KeystorePassword)
+	PlainPassword2, _ := DecryptPassword(CurrentResourceInGroup.EnablePassword, KeystorePassword)
+	PlainSNMPv3Auth, _ := DecryptPassword(CurrentResourceInGroup.SNMPv3Auth, KeystorePassword)
+	PlainSNMPv3priv, _ := DecryptPassword(CurrentResourceInGroup.SNMPv3Priv, KeystorePassword)
+	PlainSNMPv2Community, _ := DecryptPassword(CurrentResourceInGroup.SNMPv2Community, KeystorePassword)
 	fmt.Println("Name\t\t:", CurrentResourceInGroup.Name)
 	fmt.Println("IP address\t:", CurrentResourceInGroup.Ipaddr)
 	fmt.Println("FQDN\t\t:", CurrentResourceInGroup.FQDN)
 	fmt.Println("Username\t:", CurrentResourceInGroup.Username)
-	PlainPassword, _ := DecryptPassword(CurrentResourceInGroup.Password, KeystorePassword)
 	fmt.Println("Password\t:", PlainPassword)
-	PlainPassword2, _ := DecryptPassword(CurrentResourceInGroup.Password2, KeystorePassword)
-	fmt.Println("Second password\t:", PlainPassword2)
+	fmt.Println("Enable password\t:", PlainPassword2)
+	fmt.Println("SNMP ver\t:", CurrentResourceInGroup.SNMPver)
+	fmt.Println("SNMPv3 User\t:", CurrentResourceInGroup.SNMPv3USM)
+	fmt.Println("SNMPv3 Auth\t:", CurrentResourceInGroup.SNMPv3AuthProto)
+	fmt.Println("SNMPv3 Auth key\t:", PlainSNMPv3Auth)
+	fmt.Println("SNMPv3 Priv\t:", CurrentResourceInGroup.SNMPv3PrivProto)
+	fmt.Println("SNMPv3 Priv key\t:", PlainSNMPv3priv)
+	fmt.Println("SNMP Community\t:", PlainSNMPv2Community)
 	fmt.Println("Description\t:", CurrentResourceInGroup.Description)
 }
 
@@ -597,6 +816,7 @@ func FindResorceByText(Gr *KeystoreData, TextToFind string) (err error, Res []Fi
 				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.Ipaddr)), FidText) ||
 				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.FQDN)), FidText) ||
 				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.Username)), FidText) ||
+				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.SNMPv3USM)), FidText) ||
 				strings.Contains(strings.TrimSpace(strings.ToLower(ResCninG.Description)), FidText) {
 				RsRetInG = append(RsRetInG, ResCninG)
 			}
@@ -617,7 +837,16 @@ func main() {
 	Flagfqdn := flag.String("fqdn", "", "Resource FQDN adress")
 	Flagusername := flag.String("u", "", "Username")
 	Flagpassword := flag.String("p", "", "Password")
-	Flagpassword2 := flag.String("p2", "", "Second password (for example, Cisco enable password)")
+	Flagpassword2 := flag.String("p2", "", "Enable password")
+	Description := flag.String("d", "", "Description")
+	SNMPver := flag.Int("snmpver", 0, "SNMP version, 2 or 3")
+	SNMPv3USM := flag.String("snmpv3u", "", "SNMP v3 user name")
+	SNMPv3AuthProto := flag.String("a", "", "SNMP v3 auth protocol, must be md5, sha or none")
+	SNMPv3AuthKey := flag.String("A", "", "SNMP v3 auth key")
+	SNMPv3PrivProto := flag.String("x", "", "SNMP v3 priv protocol, must be des, aes or none")
+	SNMPv3PrivKey := flag.String("X", "", "SNMP v3 auth key")
+	SNMPv2Community := flag.String("c", "", "SNMP v2 community string")
+
 	Flaggroupname := flag.String("g", "Default", "Group name")
 	Listgroup := flag.Bool("lg", false, "List group")
 	ListAll := flag.Bool("l", false, "List all")
@@ -630,7 +859,6 @@ func main() {
 	Showresource := flag.Bool("show", false, "Provide group name -g and resource name -n")
 	KeystoreName := flag.String("keystore", "Resources.json", "Name of the keystore - file name like: keystore1.json")
 	MakeUnencryptedXML := flag.String("makexml", "", "Make unencrypted xml file")
-	Description := flag.String("d", "", "Description")
 	ChangeMasterPassword := flag.Bool("passwd", false, "Change Master password for datastore")
 	FindResources := flag.String("find", "", "Find resources (all fields except passwords) by text, no case sensivity")
 	flag.Parse()
@@ -640,7 +868,7 @@ func main() {
 
 	ex, err := os.Executable()
 	if err != nil {
-		panic(err)
+		panic(any(err))
 	}
 
 	//Проверка комманд
@@ -729,12 +957,16 @@ func main() {
 		UseCmdFlagNumber++
 	}
 
+	if *ChangeMasterPassword {
+		UseCmdFlagNumber++
+	}
+
 	if len(*MakeUnencryptedXML) > 0 {
 		UseCmdFlagNumber++
 	}
 
 	if UseCmdFlagNumber == 0 {
-		fmt.Println("You need to provide command flag (-add -show, -delete, -edit, -deletegroup, -l, -lg, -lrg, -find, -copy or -makexml)")
+		fmt.Println("You need to provide command flag (-add -show, -delete, -edit, -deletegroup, -l, -lg, -lrg, -find, -copy, -passwd or -makexml)")
 		os.Exit(1)
 	}
 	if UseCmdFlagNumber > 1 {
@@ -902,7 +1134,23 @@ func main() {
 
 	if *Flagaddresource {
 		if CheckFlag("n") {
-			AddErr := AddData(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, *Description, Gr, KeystorePassword)
+			AddErr := AddData(*Flaggroupname,
+				*Flagname,
+				*Flagip,
+				*Flagfqdn,
+				*Flagusername,
+				*Flagpassword,
+				*Flagpassword2,
+				*SNMPver,
+				*SNMPv3USM,
+				*SNMPv3AuthProto,
+				*SNMPv3AuthKey,
+				*SNMPv3PrivProto,
+				*SNMPv3PrivKey,
+				*SNMPv2Community,
+				*Description,
+				Gr,
+				KeystorePassword)
 			if AddErr != nil {
 				fmt.Println(AddErr)
 				os.Exit(1)
@@ -948,7 +1196,23 @@ func main() {
 
 	if *Flageditresource {
 		if CheckFlag("n") {
-			DeleteErr := EditResource(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, *Description, Gr, KeystorePassword)
+			DeleteErr := EditResource(*Flaggroupname,
+				*Flagname,
+				*Flagip,
+				*Flagfqdn,
+				*Flagusername,
+				*Flagpassword,
+				*Flagpassword2,
+				*SNMPver,
+				*SNMPv3USM,
+				*SNMPv3AuthProto,
+				*SNMPv3AuthKey,
+				*SNMPv3PrivProto,
+				*SNMPv3PrivKey,
+				*SNMPv2Community,
+				*Description,
+				Gr,
+				KeystorePassword)
 			if DeleteErr != nil {
 				fmt.Println(DeleteErr)
 				os.Exit(1)
@@ -964,7 +1228,24 @@ func main() {
 	}
 	if len(*Flagcopy) > 0 {
 		if CheckFlag("n") {
-			CopyErr := CopyResource(*Flaggroupname, *Flagname, *Flagip, *Flagfqdn, *Flagusername, *Flagpassword, *Flagpassword2, *Description, Gr, KeystorePassword, *Flagcopy)
+			CopyErr := CopyResource(*Flaggroupname,
+				*Flagname,
+				*Flagip,
+				*Flagfqdn,
+				*Flagusername,
+				*Flagpassword,
+				*Flagpassword2,
+				*SNMPver,
+				*SNMPv3USM,
+				*SNMPv3AuthProto,
+				*SNMPv3AuthKey,
+				*SNMPv3PrivProto,
+				*SNMPv3PrivKey,
+				*SNMPv2Community,
+				*Description,
+				Gr,
+				KeystorePassword,
+				*Flagcopy)
 			if CopyErr != nil {
 				fmt.Println(CopyErr)
 				os.Exit(1)
