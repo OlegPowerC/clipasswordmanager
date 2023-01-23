@@ -329,7 +329,7 @@ func CopyResource(GroupName string,
 	if len(Name) < 3 {
 		return fmt.Errorf("No name of the resource")
 	}
-	if len(GroupName) < 3 {
+	if len(GroupName) < 1 {
 		return fmt.Errorf("No group name")
 	}
 
