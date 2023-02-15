@@ -157,10 +157,10 @@ func EditResource(GroupName string,
 	EncryptedSnmpPriv, _ := EncryptPassword(SNMPv3Priv, keystorepassword)
 	EncryptedSnmpCommunity, _ := EncryptPassword(SNMPv2Community, keystorepassword)
 
-	if len(Name) < 3 {
+	if len(Name) < 1 {
 		return fmt.Errorf("No name of the resource")
 	}
-	if len(GroupName) < 3 {
+	if len(GroupName) < 1 {
 		return fmt.Errorf("No group name")
 	}
 
