@@ -63,9 +63,9 @@ Example command:<br>
     find resources:<br>
         clipm.exe -keystore mainkeystore.json -find 192.168.0.1<br>
             Find resource by text "192.168.0.1"in all field except password, no case sensivity<br>
-            ======================================================================<br>
+            ---
             Resources int group: Default<br>
-            ----------------------------------------------------------------------<br>
+            ---
             Name            : Demoresource<br>
             IP address      : 192.168.0.1<br>
             FQDN            : DemoCisco.yourdomain.local<br>
