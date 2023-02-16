@@ -63,9 +63,9 @@ clipm.exe -keystore mainkeystore.json -l
               |-- core_sw01
 #### find resources:
 clipm.exe -keystore mainkeystore.json -find 192.168.0.1\
-Find resource by text "192.168.0.1"in all field except password, no case sensivity
+Find resource by text "192.168.0.1" in all field except password, no case sensivity
 ____
-Resources int group: Default\
+Resources int group: Default
 
             Name            : Demoresource
             IP address      : 192.168.0.1
