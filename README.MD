@@ -1,21 +1,21 @@
-CLI Password manager.<br>
-License - GPL.<br>
-Data write to JSON file.<br>
+#CLI Password manager
+License - GPL
+###Data write to JSON file
 I use AES encryption for protection sensivity data (Passwords).
 When datastore file create, I make sha hash of the master password and encrypt it by AES use masterpasword for make AES key.
 When we open datastore, we decrypt this encrypted hash and compare to calculated hash.
 If it equal then password is valid.
 I make simple stupid cli interface but it work perfect for me.
 You can change anything but please send me Your modification.
-Thank You.\
+Thank You.  
 Parameters:\
 -add Add resource\
--copy string Provide new name of the resource<br>
--delete Delete resource<br>
--deletegroup Delete empty group<br>
--edit Edit resource<br>
--find string Find resources by text<br>
--passwd change keystore password<br>
+-copy string Provide new name of the resource<br/>
+-delete Delete resource<br/>
+-deletegroup Delete empty group<br/>
+-edit Edit resource\
+-find string Find resources by text\
+-passwd change keystore password\
 -fqdn string Resource FQDN adress<br>
 -g string Group name (default "Default")<br>
 -i string Resource IP adress<br>
