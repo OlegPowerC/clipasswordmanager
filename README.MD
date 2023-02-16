@@ -1,6 +1,6 @@
-#CLI Password manager
+# CLI Password manager
 License - GPL
-###Data write to JSON file
+### Data write to JSON file
 I use AES encryption for protection sensivity data (Passwords).
 When datastore file create, I make sha hash of the master password and encrypt it by AES use masterpasword for make AES key.
 When we open datastore, we decrypt this encrypted hash and compare to calculated hash.
