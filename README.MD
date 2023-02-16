@@ -67,14 +67,14 @@ Find resource by text "192.168.0.1"in all field except password, no case sensivi
 ____
 Resources int group: Default\
 
-            Name            : Demoresource<br>
-            IP address      : 192.168.0.1<br>
-            FQDN            : DemoCisco.yourdomain.local<br>
-            Username        : Cisco<br>
-            Password        : Cisco<br>
-            Second password : Cisco123%<br>
-            Description     : Cisco switch<br>
-            In all command, You can leave keystore parameter (default keystore will be use)<br>
+            Name            : Demoresource
+            IP address      : 192.168.0.1
+            FQDN            : DemoCisco.yourdomain.local
+            Username        : Cisco
+            Password        : Cisco
+            Second password : Cisco123%
+            Description     : Cisco switch
+            In all command, You can leave keystore parameter (default keystore will be use)
 ____
 ### New features:
 added parameter Default_keystore in settings.json for provide default keystore name (json file name)\
