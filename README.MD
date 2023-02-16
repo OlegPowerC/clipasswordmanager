@@ -64,7 +64,6 @@ clipm.exe -keystore mainkeystore.json -l
 #### find resources:
 clipm.exe -keystore mainkeystore.json -find 192.168.0.1\
 Find resource by text "192.168.0.1" in all field except password, no case sensivity
-____
 Resources int group: Default
 
             Name            : Demoresource
@@ -74,7 +73,8 @@ Resources int group: Default
             Password        : Cisco
             Second password : Cisco123%
             Description     : Cisco switch
-            In all command, You can leave keystore parameter (default keystore will be use)
+
+In all command, You can leave keystore parameter (default keystore will be use)
 ____
 ### New features:
 added parameter Default_keystore in settings.json for provide default keystore name (json file name)\
