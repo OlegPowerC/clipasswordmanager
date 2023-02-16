@@ -7,11 +7,9 @@ When we open datastore, we decrypt this encrypted hash and compare to calculated
 If it equal then password is valid.
 I make simple stupid cli interface but it work perfect for me.
 You can change anything but please send me Your modification.
-Thank You.
-<br>
-<hr>
-Parameters:<br>
--add Add resource<br>
+Thank You.\
+Parameters:\
+-add Add resource\
 -copy string Provide new name of the resource<br>
 -delete Delete resource<br>
 -deletegroup Delete empty group<br>
