@@ -43,7 +43,7 @@ ____
 clipm.exe -keystore mainkeystore.json -add -g Group1 -n CiscoSw_01 -i 192.168.1.58 -u CiscoAdm -p CiP@$$1 -p2 CiEnableP@$$1 -d "CiscoSw"<br>
 #### dlete resource:
 clipm.exe -keystore mainkeystore.json -delete -g Group1 -n CiscoSw_01<br>
-####dlete empty group:
+#### dlete empty group:
 clipm.exe -keystore mainkeystore.json -deletegroup -g Group1<br>
 #### edit resource:
 clipm.exe -keystore mainkeystore.json -edit -g Group1 -n CiscoSw_01 -i 192.168.1.58 -u CiscoAdm -p CiP@$$2 -p2 CiEnableP@$$2 -d "CiscoSw"<br>
