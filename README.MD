@@ -82,4 +82,4 @@ added parameter Create_backups in settings.json. If this parameter 0 - no backup
 
 ### Binary:
 Windows: clipm.exe\
-Linux: clipm (will need make it executable by chmod +h clipm)
+Linux: clipm (will need make it executable by chmod +x clipm)
