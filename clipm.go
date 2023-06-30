@@ -18,6 +18,9 @@ import (
 	"time"
 )
 
+type KeePassEntry struct {
+}
+
 type KeystoreData struct {
 	Encryptedpasswords bool    `json:"encryptedpasswords" xml:"encryptedpasswords"`
 	Magicphrase        string  `json:"magicphrase" xml:"magicphrase"`
@@ -42,8 +45,8 @@ type ResourceItem struct {
 	EnablePassword  string `json:"enable_password" xml:"enable_password"`
 	SNMPver         int    `json:"snmp_ver" xml:"snmp_ver"`
 	SNMPv3USM       string `json:"snmpv3_usm" xml:"snmpv3_usm"`
-	SNMPv3AuthProto string `json:"snmpv3_auth_proto"`
-	SNMPv3Auth      string `json:"snmpv3_auth"`
+	SNMPv3AuthProto string `json:"snmpv3_auth_proto" xml:"snmpv3_auth_proto"`
+	SNMPv3Auth      string `json:"snmpv3_auth" xml:"snmpv3_auth"`
 	SNMPv3PrivProto string `json:"snmpv3_priv_proto" xml:"snmpv3_priv_proto"`
 	SNMPv3Priv      string `json:"snmpv3_priv" xml:"snmpv3_priv"`
 	SNMPv2Community string `json:"snmpv2_community" xml:"snmpv2_community"`
@@ -719,6 +722,12 @@ func MakePlainetxXML(UnexcryptedXmlFilename string, Gr *KeystoreData, KeystorePa
 			XMLResource.Username = Res.Username
 			XMLResource.Password, _ = DecryptPassword(Res.Password, KeystorePassword)
 			XMLResource.EnablePassword, _ = DecryptPassword(Res.EnablePassword, KeystorePassword)
+			XMLResource.SNMPver = Res.SNMPver
+			XMLResource.SNMPv2Community, _ = DecryptPassword(Res.SNMPv2Community, KeystorePassword)
+			XMLResource.SNMPv3AuthProto = Res.SNMPv3AuthProto
+			XMLResource.SNMPv3PrivProto = Res.SNMPv3PrivProto
+			XMLResource.SNMPv3Auth, _ = DecryptPassword(Res.SNMPv3Auth, KeystorePassword)
+			XMLResource.SNMPv3Priv, _ = DecryptPassword(Res.SNMPv3Priv, KeystorePassword)
 			XMLResource.Description = Res.Description
 			XMLSources = append(XMLSources, XMLResource)
 		}
